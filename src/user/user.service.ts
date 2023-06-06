@@ -1,15 +1,16 @@
-import { Injectable, Param } from '@nestjs/common';
+import { Injectable, NotFoundException, Param } from '@nestjs/common';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDTO } from './dto/update-put-user.dto';
+import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUser: CreateUserDTO) {
+  async create(data: CreateUserDTO) {
     return this.prisma.user.create({
-      data: createUser,
+      data,
     });
   }
 
@@ -25,14 +26,50 @@ export class UserService {
     });
   }
 
-  async updateOne(@Param() updateUser: UpdateUserDTO, id) {
-    return this.prisma.user.update({
-      data: updateUser,
+  async show(id: number) {
+    return this.prisma.user.findUnique({
       where: {
         id,
       },
     });
   }
 
-  // async updatePartial(@Param() {}: UpdateUserDTO)
+  async exists(id: number) {
+    if (!this.show(id)) {
+      return new NotFoundException(`user ${id} not found!`);
+    }
+  }
+
+  async update(@Param() data: UpdateUserDTO, id: number) {
+    await this.exists(id);
+    const dateTime = data.birthAt ? new Date(data.birthAt).toISOString() : null;
+    data.birthAt = dateTime;
+    return this.prisma.user.update({
+      data,
+      where: {
+        id,
+      },
+    });
+  }
+
+  async updatePartial(@Param() data: UpdatePatchUserDTO, id: number) {
+    await this.exists(id);
+    const dateTime = data.birthAt ? new Date(data.birthAt).toISOString() : null;
+    data.birthAt = dateTime;
+    return this.prisma.user.update({
+      data: data,
+      where: {
+        id,
+      },
+    });
+  }
+
+  async delete(id: number) {
+    await this.exists(id);
+    return this.prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+  }
 }
