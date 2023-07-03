@@ -9,6 +9,8 @@ export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateUserDTO) {
+    const dateTime = data.birthAt ? new Date(data.birthAt).toISOString() : null;
+    data.birthAt = dateTime;
     return this.prisma.user.create({
       data,
     });
@@ -18,15 +20,8 @@ export class UserService {
     return this.prisma.user.findMany();
   }
 
-  async listOne(@Param() id) {
-    return this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
-
   async show(id: number) {
+    await this.exists(id);
     return this.prisma.user.findUnique({
       where: {
         id,
@@ -35,7 +30,13 @@ export class UserService {
   }
 
   async exists(id: number) {
-    if (!this.show(id)) {
+    if (
+      !(await this.prisma.user.count({
+        where: {
+          id,
+        },
+      }))
+    ) {
       return new NotFoundException(`user ${id} not found!`);
     }
   }
