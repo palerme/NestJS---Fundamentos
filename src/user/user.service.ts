@@ -22,11 +22,7 @@ export class UserService {
 
   async show(id: number) {
     await this.exists(id);
-    return this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
+    return this.prisma.user;
   }
 
   async exists(id: number) {
@@ -37,8 +33,9 @@ export class UserService {
         },
       }))
     ) {
-      return new NotFoundException(`user ${id} not found!`);
+      throw new NotFoundException(`user ${id} not found!`);
     }
+    return this.prisma.user;
   }
 
   async update(@Param() data: UpdateUserDTO, id: number) {
