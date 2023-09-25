@@ -21,8 +21,11 @@ export class UserService {
   }
 
   async show(id: number) {
-    await this.exists(id);
-    return this.prisma.user;
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
   }
 
   async exists(id: number) {
@@ -33,7 +36,7 @@ export class UserService {
         },
       }))
     ) {
-      throw new NotFoundException(`user ${id} not found!`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
     return this.prisma.user;
   }

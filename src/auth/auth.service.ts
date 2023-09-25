@@ -18,9 +18,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
-  async createToken(user: User) {
+  createToken(user: User) {
     return {
       accesToken: this.jwtService.sign(
         {
@@ -39,7 +39,7 @@ export class AuthService {
     };
   }
 
-  async checkToken(token: string) {
+  checkToken(token: string) {
     try {
       const data = this.jwtService.verify(token, {
         audience: this.audience,
@@ -48,7 +48,7 @@ export class AuthService {
 
       return data;
     } catch (e) {
-      throw new BadRequestException(e);
+      throw new BadRequestException(e, { cause: new Error(e) });
     }
   }
 
@@ -102,7 +102,7 @@ export class AuthService {
     return this.createToken(user);
   }
 
-  async isValidToken(token: string) {
+  isValidToken(token: string) {
     try {
       this.checkToken(token);
       return true;
