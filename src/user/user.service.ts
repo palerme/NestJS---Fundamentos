@@ -3,14 +3,17 @@ import { CreateUserDTO } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDTO } from './dto/update-put-user.dto';
 import { UpdatePatchUserDTO } from './dto/update-patch-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateUserDTO) {
-    const dateTime = data.birthAt ? new Date(data.birthAt).toISOString() : null;
-    data.birthAt = dateTime;
+    const salt = await bcrypt.genSalt();
+
+    data.password = await bcrypt.hash(data.password, salt);
+
     return this.prisma.user.create({
       data,
     });
@@ -43,8 +46,14 @@ export class UserService {
 
   async update(@Param() data: UpdateUserDTO, id: number) {
     await this.exists(id);
-    const dateTime = data.birthAt ? new Date(data.birthAt).toISOString() : null;
-    data.birthAt = dateTime;
+    if (typeof data.birthAt !== 'undefined' && data.birthAt !== null) {
+      data.birthAt = new Date(data.birthAt).toISOString();
+    }
+
+    const salt = await bcrypt.genSalt();
+
+    data.password = await bcrypt.hash(data.password, salt);
+
     return this.prisma.user.update({
       data,
       where: {
@@ -55,10 +64,33 @@ export class UserService {
 
   async updatePartial(@Param() data: UpdatePatchUserDTO, id: number) {
     await this.exists(id);
-    const dateTime = data.birthAt ? new Date(data.birthAt).toISOString() : null;
-    data.birthAt = dateTime;
+
+    const update: UpdatePatchUserDTO = {};
+
+    if (typeof data.birthAt !== 'undefined' && data.birthAt !== null) {
+      update.birthAt = new Date(data.birthAt).toISOString();
+    }
+
+    if (typeof data.email !== 'undefined' && data.email !== null) {
+      update.email = data.email;
+    }
+
+    if (typeof data.password !== 'undefined' && data.password !== null) {
+      const salt = await bcrypt.genSalt();
+
+      update.password = await bcrypt.hash(data.password, salt);
+    }
+
+    if (typeof data.name !== 'undefined' && data.name !== null) {
+      update.name = data.name;
+    }
+
+    if (typeof data.role !== 'undefined' && data.role !== null) {
+      update.role = data.role;
+    }
+
     return this.prisma.user.update({
-      data: data,
+      data,
       where: {
         id,
       },
