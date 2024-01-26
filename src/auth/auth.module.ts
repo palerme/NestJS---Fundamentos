@@ -5,6 +5,7 @@ import { UserModule } from 'src/user/user.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { AuthService } from './auth.service';
 import { ConfigModule } from '@nestjs/config';
+import { FileModule } from 'src/file/file.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
     }),
     PrismaModule,
     forwardRef(() => UserModule),
+    FileModule
   ],
   providers: [AuthService],
   controllers: [AuthController],
